@@ -75,15 +75,21 @@ public class NamesrvController {
 
     public boolean initialize() {
 
+        // 将namesrcConfig中的kvConfigPath指定的文件转为字符串
+        // 然后转换为KVConfigSerializeWrapper对象后，put到configTable对象中
         this.kvConfigManager.load();
 
+        // 1）实例化netty服务端，后面将启动这个服务端接收请求
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // 实例化远程调用线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // 2）注册请求处理器
         this.registerProcessor();
 
+        // 定时扫描非存活的broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +98,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        // 定时打印什么东西，不懂
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -100,6 +107,7 @@ public class NamesrvController {
             }
         }, 1, 10, TimeUnit.MINUTES);
 
+        // TLS模式，有3种选择，分别为禁用、可选和强制
         if (TlsSystemConfig.tlsMode != TlsMode.DISABLED) {
             // Register a listener to reload SslContext
             try {
