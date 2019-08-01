@@ -400,19 +400,23 @@ public abstract class NettyRemotingAbstract {
         final int opaque = request.getOpaque();
 
         try {
+            // 封装异步请求
             final ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeoutMillis, null, null);
             this.responseTable.put(opaque, responseFuture);
             final SocketAddress addr = channel.remoteAddress();
+            // 异步写数据，
             channel.writeAndFlush(request).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture f) throws Exception {
                     if (f.isSuccess()) {
+                        // 如果发送请求成功后，将sendRequestOK设为true
                         responseFuture.setSendRequestOK(true);
                         return;
                     } else {
                         responseFuture.setSendRequestOK(false);
                     }
 
+                    // 发送请求失败后，因为所有请求等待的响应都存在responseTable中，所以请求失败后直接移除
                     responseTable.remove(opaque);
                     responseFuture.setCause(f.cause());
                     responseFuture.putResponse(null);
@@ -420,6 +424,7 @@ public abstract class NettyRemotingAbstract {
                 }
             });
 
+            // 等待指定时间后获取response，如果没有响应，检查是否成功发出请求，如果发出了请求抛出请求超时异常，否则排除请求失败异常
             RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
             if (null == responseCommand) {
                 if (responseFuture.isSendRequestOK()) {
