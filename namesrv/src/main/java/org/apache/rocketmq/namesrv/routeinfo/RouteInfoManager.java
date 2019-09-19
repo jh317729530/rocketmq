@@ -150,6 +150,7 @@ public class RouteInfoManager {
                             topicConfigWrapper.getTopicConfigTable();
                         if (tcTable != null) {
                             for (Map.Entry<String, TopicConfig> entry : tcTable.entrySet()) {
+                                // 调用这个方法是创建并更新队列，如果原有的队列中有数据，便迁移到新的队列中
                                 this.createAndUpdateQueueData(brokerName, entry.getValue());
                             }
                         }

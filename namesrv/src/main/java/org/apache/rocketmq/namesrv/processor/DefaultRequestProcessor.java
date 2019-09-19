@@ -207,6 +207,7 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
 
         if (request.getBody() != null) {
             try {
+                // 解码请求体
                 registerBrokerBody = RegisterBrokerBody.decode(request.getBody(), requestHeader.isCompressed());
             } catch (Exception e) {
                 throw new RemotingCommandException("Failed to decode RegisterBrokerBody", e);
